@@ -1,0 +1,14 @@
+<form action="" method="post">
+{{ form.hidden_tag() }}
+    {% for subfield in form.category %}
+        {{ subfield }}
+        {{ subfield.label }}<br>
+    {% endfor %}
+    {{ form.password.label }}: {{ form.password }}
+    <br>
+    {{ form.email.label }}: {{ form.email }}
+    <br>
+    {{ form.realname.label }}: {{ form.realname }}
+    <br>
+    {{ form.submit }}
+</form>

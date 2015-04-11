@@ -13,11 +13,20 @@
     <br>
     <br>
 
-    <form id="password" action="" method="POST">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class=flashes>
+        {% for message in messages %}
+          <li class="bg-danger">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form id="password" action="" method="post">
         {{ form.hidden_tag() }}
         {{ form.password(placeholder="password", maxlength="21", id="textfield") }}
-        <!--<input type="password" name="pw" id="textfield" maxlength="21">--><br>
-        <br><br>
+        <br><br><br>
         {{ form.submit(src=url_for('static',filename='img/enter_button.png'), type="image") }}
     </form>
 </div>

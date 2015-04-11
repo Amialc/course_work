@@ -27,6 +27,21 @@ class User(db.Model):
             return True
         return False
 
+    def get_id(self):
+        return unicode(self.id)
+
+    @staticmethod
+    def is_authenticated():
+        return True
+
+    @staticmethod
+    def is_active():
+        return True
+
+    @staticmethod
+    def is_anonymous():
+        return False
+
     @staticmethod
     def verify_auth_token(token):
         try:
@@ -53,7 +68,6 @@ class UserProfile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     realname = db.Column(db.String(250))
 
-
     def __init__(self, user_id, realname=None):
         self.user_id = user_id
         self.realname = realname
@@ -62,6 +76,20 @@ class Teacher(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+    def __init__(self, user_id):
+        self.user_id = user_id
+
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class Test(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(250))
+    final_date = db.Column(db.DateTime)
+
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
+    text = db.Column(db.String(250))

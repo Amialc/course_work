@@ -1,9 +1,11 @@
 body {
     background-color: black;
-	margin-right: 15%;
-    margin-left: 15%;
+	margin-right: 10%;
+    margin-left: 10%;
 }
-#navbar{
-    background-color: black;
-	
+#custom-navbar.navbar-default {
+    font-size: 14px;
+    background-color: rgba(248, 248, 248, 1);
+    border-width: 1px;
+    border-radius: 50px;
 }
