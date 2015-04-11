@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from "macro.html" import render_field %}
 
 {% block header %}
     <link href="{{ url_for('static',filename='css/index.css') }}" rel="stylesheet">
@@ -11,11 +12,13 @@
     <br>
     <br>
     <br>
-    {{ form.password(maxlength="21", id="textfield") }}
-    <form id="password" action="{{ url_for('test') }}" method="POST">
-        <input type="password" name="pw" id="textfield" maxlength="21"><br>
+
+    <form id="password" action="" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.password(placeholder="password", maxlength="21", id="textfield") }}
+        <!--<input type="password" name="pw" id="textfield" maxlength="21">--><br>
         <br><br>
-        <input type="image" src="static/img/enter_button.png" onmouseover="this.src='static/img/enter_button_hover.png'" onmouseout="this.src='static/img/enter_button.png'" alt="Enter">
+        {{ form.submit(src=url_for('static',filename='img/enter_button.png'), type="image") }}
     </form>
 </div>
 {% endblock %}

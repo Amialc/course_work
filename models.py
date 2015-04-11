@@ -8,3 +8,11 @@ class UserProfile(db.Model):
     def __init__(self, user_id, realname = None):
         self.user_id = user_id
         self.realname = realname
+
+class Teacher(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('userprofile.id'))
+
+class Student(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('userprofile.id'))

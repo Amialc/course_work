@@ -14,6 +14,11 @@ img {
 *:focus {
     outline: none;
 }
+
+#submit:hover {
+
+}
+
 #password {
     text-align: center;
     margin-right: auto;

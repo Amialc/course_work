@@ -7,12 +7,12 @@
     <link href="{{ url_for('static',filename='css/bootstrap-theme.min.css') }}" rel="stylesheet">
     {% block header %}
     {% endblock %}
-    {% block navbar %}
-    {% endblock %}
 </head>
 <body>
-{% block content %}
+{% block navbar %}
+{% endblock %}
 
+{% block content %}
 {% endblock %}
 
 {% block script %}
