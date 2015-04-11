@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Course</title>
+    <link href="{{ url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static',filename='css/bootstrap-theme.min.css') }}" rel="stylesheet">
+    {% block header %}
+    {% endblock %}
+    {% block navbar %}
+    {% endblock %}
+</head>
+<body>
+{% block content %}
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="{{ url_for('static',filename='js/jquery-2.1.3.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
+{% endblock %}
+</body>
+</html>

@@ -1,9 +1,11 @@
 from course import app
 from flask import render_template
+from forms import IndexForm
 
 @app.route('/')
 def hello_world():
-    return render_template('index.html')
+    form = IndexForm()
+    return render_template('index.html', form = form)
 
 
 @app.route('/test', methods=['GET','POST'])
