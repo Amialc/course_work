@@ -1,10 +1,11 @@
 from course import app, db, login_serializer, lm
-from flask_login import login_required, login_user
+from flask_login import login_required, login_user, logout_user, current_user
 from flask import render_template, redirect, url_for, flash, g
-from forms import IndexForm, AddForm
-from models import User, Teacher, Student
+from forms import IndexForm, AddUserForm
+from models import User, Teacher, Student, Test, UserProfile, Question
 from hashlib import md5
 from json import dumps
+
 
 @lm.user_loader
 def load_user(user_id):
@@ -60,7 +61,8 @@ def load_token(token):
     return None
 
 def decode(password):
-    return password
+    m = md5(password)
+    return m.hexdigest()
 
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -79,32 +81,55 @@ def index():
 
     return render_template('index.html', form = form)
 
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
 
 @app.route('/test', methods=['GET','POST'])
 @app.route('/test/', methods=['GET','POST'])
 @login_required
 def test():
-    tests = 1 #
+    user_id = current_user.id
+    teacher_id = Teacher.query.filter_by(user_id = user_id).first()
+    tests = Test.query.filter_by(teacher_id = teacher_id).all()
+    print tests
+
     return render_template('test.html', tests = tests)
 
-@app.route('/add',methods=['GET','POST'])
-@app.route('/add/',methods=['GET','POST'])
+@app.route('/add_test', methods=['GET','POST'])
+@app.route('/add_test/',methods=['GET','POST'])
+@app.route('/add_test/<int:id>', methods=['GET','POST'])
+@login_required
+def edit_test(id=''):
+    if current_user.is_student():
+        return redirect(url_for('index'))
+    form = 1
+    questions = Question.query.filter_by(test_id = id).all
+    return render_template('edit_test.html', form=form)
+
+
+@app.route('/add_user',methods=['GET','POST'])
+@app.route('/add_user/',methods=['GET','POST'])
 def add_user():
-    form = AddForm()
+    form = AddUserForm()
     if form.validate_on_submit():
-        #password = md5(form.password.data)
-        #print "pass", password.digest()
         password = decode(form.password.data)
         if not User.query.filter_by(password = password).first(): #user doesnt exist
             if form.category.data == 'Teacher':
                 sess = db.session()
                 user = User(form.email.data, password)
-                teacher = Teacher(user.id)
                 sess.add(user)
+                sess.commit()
+                teacher = Teacher(user.id)
+                userprofile = UserProfile(user.id,form.realname.data)
+                sess.add(userprofile)
                 sess.add(teacher)
                 sess.commit()
                 return redirect(url_for('index'))
         else:
-            print "net"
+            return "net" #TODO: fix
         print form.password.data
-    return render_template('add.html',form = form)
+    return render_template('add_user.html',form = form)

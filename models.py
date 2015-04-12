@@ -12,6 +12,31 @@ class User(db.Model):
             self.email = email
             self.password = password
 
+    def get_name(self):
+        user = UserProfile.query.filter_by(user_id = self.id).first()
+        if user:
+            return user.realname
+        else:
+            return None
+
+    def is_teacher(self):
+        if Teacher.query.filter_by(user_id = self.id).first():
+            return True
+        else:
+            return False
+
+    def is_admin(self):
+        if self.id == 1:
+            return True
+        else:
+            return False
+
+    def is_student(self):
+        if (not self.is_admin()) and (not self.is_teacher()):
+            return True
+        else:
+            return False
+
     def get_auth_token(self):
         """
         Encode a secure token for cookie
@@ -85,7 +110,7 @@ class Student(db.Model):
 
 class Test(db.Model):
     id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, primary_key = True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'))
     name = db.Column(db.String(250))
     final_date = db.Column(db.DateTime)
 

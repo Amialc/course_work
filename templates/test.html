@@ -1,12 +1,41 @@
-{% extends 'navbar.html' %}
+{% extends 'base.html' %}
 
+{% block header %}
+<link href="{{ url_for('static',filename='css/base.css') }}" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
+
+<div id="custom-navbar" >
+    <div class="navbar navbar-default navbar-static-top navbar-inverse">
+		<div class="navbar-header" style="margin-left: 10%;">
+        <a href="#" class="navbar-brand">tests</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Test</a></li>
+            <li class="divider-vertical"></li>
+            <li><a href="#">About</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right"style="margin-right: 10%;">
+            <li><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span>Exit</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-user"></span>{{ current_user.get_name() }}</a></li>
+        </ul>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-md-5">
-        <img src="http://placehold.it/500x500" class="img-rounded">
-		<img src="img/Fak.Jpg" class="img-rounded">
-    </div>
-    </div>
+{% if tests %}
+    <table border="1" class="table table-bordered">
+     {% for test in tests %}
+        <tr>
+            <td><a href="#">{{ test.name }}</a></td>
+            <td><a href="#">remove</a></td>
+        </tr>
+     {% endfor %}
+    </table>
+{% else %}
+    <p class="text-center" style="color: #ffffff;">Sorry, no tests</p>
+{% endif %}
+<p class="text-center"><a href="{{ url_for('edit_test') }}">Add new?</a></p>
 </div>
 {% endblock %}
