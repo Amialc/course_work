@@ -8,26 +8,33 @@
     {% if questions %}
     <div id="questions">
     <table class="table table-bordered">
+    <thead style="visibility: hidden;">
+    <tr>
+        <th class="col-md-7"></th>
+        <th class="col-md-4"></th>
+        <th class="col-md-1"></th>
+    </tr>
+    </thead>
     {% for question in questions %}
     <tr>
     {% if answers[question.id] | length == 0 %}
-    <td class="col-md-8">{{ question.text }}</td>
-    <td class="col-md-4"><div class="text-center"><form method="post" action="">
+    <td>{{ question.text }}</td>
+    <td colspan="2"><div class="text-center"><form method="post" action="">
     {{ new_answer_form.hidden_tag() }}
     {{ new_answer_form.question(value=question.id, style="display: none;") }}
     {{ new_answer_form.string(placeholder="new answer") }}
     {{ new_answer_form.submit(class="btn btn-default") }}
     </form></div></td>
     {% else %}
-    <td class="col-md-8" rowspan="{{ answers[question.id] | length + 1 }}">{{ question.text }}</td>
+    <td rowspan="{{ answers[question.id] | length + 1 }}">{{ question.text }}</td>
     {% for answer in answers[question.id] %}
-    <td class="col-md-3"><ul>
+    <td><ul>
                 <li>{{ answer.text }}</li>
         </ul></td>
-    <td class="col-md-1"><a href="{{ url_for('delete_answer',id=answer.id) }}" class="btn btn-danger">delete</a></td>
+    <td><a href="{{ url_for('delete_answer',id=answer.id) }}" class="btn btn-danger">delete</a></td>
     </tr>
     {% endfor %}
-    <tr><td colspan="2" class="col-md-4">
+    <tr><td colspan="2">
     <div class="text-center">
     <form method="post" action="">
     {{ new_answer_form.hidden_tag() }}
