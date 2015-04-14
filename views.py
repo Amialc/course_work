@@ -1,18 +1,12 @@
 from course import app, db, login_serializer, lm
 from flask_login import login_required, login_user, logout_user, current_user
 from flask import render_template, redirect, url_for, flash, g
-from forms import IndexForm, AddUserForm
-from models import User, Teacher, Student, Test, Question
+from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm
+from models import User, Teacher, Student, Test, Question, Answer
 from hashlib import md5
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-def create_session(config = app.config):
-    engine = create_engine(config['SQLALCHEMY_DATABASE_URI'])
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    session._model_changes = {}
-    return session
 
 @lm.user_loader
 def load_user(user_id):
@@ -73,6 +67,8 @@ def decode(password):
 
 @app.route('/', methods=['GET','POST'])
 def index():
+    if current_user:
+        return redirect(url_for('test'))
     form = IndexForm()
     if form.validate_on_submit():
         password = decode(form.password.data)
@@ -95,6 +91,8 @@ def logout():
 @app.route('/delete_test/<int:id>', methods=['GET'])
 @login_required
 def delete_test(id):
+    if current_user.is_student():
+        return redirect(url_for('index'))
     teacher_id = Teacher.query.filter_by(user_id = current_user.id).first_or_404().id
     test = Test.query.filter_by(id = id).first()
     if test.teacher_id == teacher_id:
@@ -103,6 +101,19 @@ def delete_test(id):
         sess.commit()
     return redirect(url_for('test'))
 
+@app.route('/delete_answer/<int:id>', methods=['GET'])
+@login_required
+def delete_answer(id):
+    if current_user.is_student():
+        return redirect(url_for('index'))
+    teacher_id = Teacher.query.filter_by(user_id = current_user.id).first_or_404().id
+    answer = Answer.query.get(id)
+    test_id = Question.query.filter_by(id = answer.question_id).first().test_id
+    if Test.query.get(test_id).teacher_id == teacher_id:
+        sess = db.session()
+        sess.delete(answer)
+        sess.commit()
+    return redirect(url_for('edit_test', id = test_id))
 
 @app.route('/test', methods=['GET','POST'])
 @app.route('/test/', methods=['GET','POST'])
@@ -117,7 +128,7 @@ def test():
 @app.route('/edit_test/',methods=['GET','POST'])
 @app.route('/edit_test/<int:id>', methods=['GET','POST'])
 @login_required
-def edit_test(id=0):
+def edit_test(id=0,question=0):
     if current_user.is_student():
         return redirect(url_for('index'))
     if id == 0:
@@ -128,10 +139,44 @@ def edit_test(id=0):
         sess.commit()
         new_id = new_test.id
         return redirect(url_for('edit_test',id = new_id))
-    form = 1
     test = Test.query.filter_by(id = id).first_or_404()
-    questions = Question.query.filter_by(test_id = id).all
-    return render_template('edit_test.html', form = form, test = test, questions = questions)
+    questions = Question.query.filter_by(test_id = id).all()
+    answers = {}
+    for q in questions:
+        answers[q.id] = Answer.query.filter_by(question_id = q.id).all()
+    new_question_form = AddStringTestForm(prefix="question")
+    if new_question_form.validate_on_submit():
+        q = Question(test.id, new_question_form.string.data)
+        sess = db.session()
+        sess.add(q)
+        sess.commit()
+        return redirect(url_for('edit_test',id = test.id))
+    new_answer_form = AddAnswerForm(prefix="answer")
+    if new_answer_form.validate_on_submit():
+        answ = Answer(new_answer_form.question.data, new_answer_form.string.data)
+        db.session.add(answ)
+        db.session.commit()
+        return redirect(url_for('edit_test',id = test.id))
+    return render_template('edit_test.html',
+                           new_question_form = new_question_form, test = test, questions = questions,
+                           answers = answers, new_answer_form = new_answer_form)
+
+@app.route('/edit_test_name/<int:id>', methods=['GET','POST'])
+@login_required
+def edit_name(id):
+    if current_user.is_student():
+        return redirect(url_for('index'))
+    teacher_id = Teacher.query.filter_by(user_id = current_user.id).first_or_404().id
+    test = Test.query.get(id)
+    if test.teacher_id == teacher_id:
+        form = AddStringTestForm()
+        if form.validate_on_submit():
+            test.name = form.string.data
+            db.session.commit()
+            return redirect(url_for('edit_test', id = test.id))
+        form.string.data = test.name
+        return render_template('edit_name.html', form = form)
+
 
 
 @app.route('/add_user',methods=['GET','POST'])

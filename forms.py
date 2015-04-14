@@ -1,5 +1,5 @@
 from flask.ext.wtf import Form
-from wtforms import PasswordField, SubmitField,StringField, RadioField
+from wtforms import PasswordField, SubmitField,StringField, RadioField, HiddenField, IntegerField
 from wtforms.validators import Required
 
 class IndexForm(Form):
@@ -13,10 +13,11 @@ class AddUserForm(Form):
     password = PasswordField('password',validators=[Required()])
     submit = SubmitField('Submit')
 
-class AddNameTestForm(Form):
-    name = StringField('name', validators=[Required()])
+class AddStringTestForm(Form):
+    string = StringField('name', validators=[Required()])
     submit = SubmitField('Submit')
 
-class AddQuestTestForm(Form):
-    question = StringField('question', validators=[Required()])
+class AddAnswerForm(Form):
+    string = StringField('name', validators=[Required()])
+    question = IntegerField()
     submit = SubmitField('Submit')

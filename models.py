@@ -106,6 +106,19 @@ class Question(db.Model):
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
     text = db.Column(db.String(250))
 
+    def __init__(self, test_id, text):
+        self.test_id =  test_id
+        self.text = text
+
+class Answer(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
+    text = db.Column(db.String(250))
+
+    def __init__(self, question_id, text):
+        self.question_id = question_id
+        self.text = text
+
 class Assigned(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

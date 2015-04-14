@@ -25,7 +25,7 @@
     <table class="table table-bordered">
      {% for test in tests %}
         <tr>
-            <td><a href="#">{{ test.name }}</a></td>
+            <td><a href="{{ url_for('edit_test',id = test.id) }}">{{ test.name }}</a></td>
             <td><a href="{{ url_for('delete_test',id = test.id) }}">remove</a></td>
         </tr>
      {% endfor %}
