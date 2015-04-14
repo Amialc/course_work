@@ -4,20 +4,12 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     password = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
+    realname = db.Column(db.String(250))
 
-    def __init__(self, email=None, password=None, j=None):
-        if j is not None:
-            self.__dict__ = j
-        else:
-            self.email = email
-            self.password = password
-
-    def get_name(self):
-        user = UserProfile.query.filter_by(user_id = self.id).first()
-        if user:
-            return user.realname
-        else:
-            return None
+    def __init__(self, email, password, realname):
+        self.email = email
+        self.password = password
+        self.realname = realname
 
     def is_teacher(self):
         if Teacher.query.filter_by(user_id = self.id).first():
@@ -87,15 +79,6 @@ class User(db.Model):
             if user.id == user_id:
                 return User(user.email, user.password)
         return None
-
-class UserProfile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    realname = db.Column(db.String(250))
-
-    def __init__(self, user_id, realname=None):
-        self.user_id = user_id
-        self.realname = realname
 
 class Teacher(db.Model):
     id = db.Column(db.Integer, primary_key = True)

@@ -2,9 +2,8 @@ from course import app, db, login_serializer, lm
 from flask_login import login_required, login_user, logout_user, current_user
 from flask import render_template, redirect, url_for, flash, g
 from forms import IndexForm, AddUserForm
-from models import User, Teacher, Student, Test, UserProfile, Question
+from models import User, Teacher, Student, Test, Question
 from hashlib import md5
-from json import dumps
 
 
 @lm.user_loader
@@ -67,15 +66,13 @@ def decode(password):
 @app.route('/', methods=['GET','POST'])
 def index():
     form = IndexForm()
-    if form.validate_on_submit():#TODO: test for password
+    if form.validate_on_submit():
         password = decode(form.password.data)
         user =  User.query.filter_by(password = password).first()
         if not user:
             flash('error!')
-            print "not exist"
             return redirect(url_for('index'))
         else:
-            print "exist"
             login_user(user)
         return redirect(url_for('test', password=form.data))
 
@@ -95,13 +92,12 @@ def test():
     user_id = current_user.id
     teacher_id = Teacher.query.filter_by(user_id = user_id).first()
     tests = Test.query.filter_by(teacher_id = teacher_id).all()
-    print tests
 
     return render_template('test.html', tests = tests)
 
-@app.route('/add_test', methods=['GET','POST'])
-@app.route('/add_test/',methods=['GET','POST'])
-@app.route('/add_test/<int:id>', methods=['GET','POST'])
+@app.route('/edit_test', methods=['GET','POST'])
+@app.route('/edit_test/',methods=['GET','POST'])
+@app.route('/edit_test/<int:id>', methods=['GET','POST'])
 @login_required
 def edit_test(id=''):
     if current_user.is_student():
@@ -120,12 +116,10 @@ def add_user():
         if not User.query.filter_by(password = password).first(): #user doesnt exist
             if form.category.data == 'Teacher':
                 sess = db.session()
-                user = User(form.email.data, password)
+                user = User(form.email.data, password, form.realname.data)
                 sess.add(user)
                 sess.commit()
                 teacher = Teacher(user.id)
-                userprofile = UserProfile(user.id,form.realname.data)
-                sess.add(userprofile)
                 sess.add(teacher)
                 sess.commit()
                 return redirect(url_for('index'))
