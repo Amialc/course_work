@@ -1,9 +1,5 @@
 {% extends 'base.html' %}
 
-{% block header %}
-<link href="{{ url_for('static',filename='css/base.css') }}" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
 
 <div id="custom-navbar" >
@@ -25,16 +21,18 @@
 
 <div class="row">
 {% if tests %}
-    <table border="1" class="table table-bordered">
+<div class="text-center">
+    <table class="table table-bordered">
      {% for test in tests %}
         <tr>
             <td><a href="#">{{ test.name }}</a></td>
-            <td><a href="#">remove</a></td>
+            <td><a href="{{ url_for('delete_test',id = test.id) }}">remove</a></td>
         </tr>
      {% endfor %}
     </table>
+</div>
 {% else %}
-    <p class="text-center" style="color: #ffffff;">Sorry, no tests</p>
+    <p class="text-center">Sorry, no tests</p>
 {% endif %}
 <p class="text-center"><a href="{{ url_for('edit_test') }}">Add new?</a></p>
 </div>

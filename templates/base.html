@@ -6,6 +6,7 @@
     <link href="{{ url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='css/bootstrap-theme.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static',filename='img/favicon.ico')}}" rel="shortcut icon">
+    <link href="{{ url_for('static',filename='css/base.css') }}" rel="stylesheet">
     {% block header %}
     {% endblock %}
 </head>
@@ -16,9 +17,9 @@
 {% block content %}
 {% endblock %}
 
-{% block script %}
 <script type="text/javascript" src="{{ url_for('static',filename='js/jquery-2.1.3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
+{% block script %}
 {% endblock %}
 </body>
 </html>

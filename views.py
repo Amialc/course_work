@@ -4,7 +4,15 @@ from flask import render_template, redirect, url_for, flash, g
 from forms import IndexForm, AddUserForm
 from models import User, Teacher, Student, Test, Question
 from hashlib import md5
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
+def create_session(config = app.config):
+    engine = create_engine(config['SQLALCHEMY_DATABASE_URI'])
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    session._model_changes = {}
+    return session
 
 @lm.user_loader
 def load_user(user_id):
@@ -84,27 +92,46 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/delete_test/<int:id>', methods=['GET'])
+@login_required
+def delete_test(id):
+    teacher_id = Teacher.query.filter_by(user_id = current_user.id).first_or_404().id
+    test = Test.query.filter_by(id = id).first()
+    if test.teacher_id == teacher_id:
+        sess = db.session()
+        sess.delete(test)
+        sess.commit()
+    return redirect(url_for('test'))
+
 
 @app.route('/test', methods=['GET','POST'])
 @app.route('/test/', methods=['GET','POST'])
 @login_required
 def test():
     user_id = current_user.id
-    teacher_id = Teacher.query.filter_by(user_id = user_id).first()
+    teacher_id = Teacher.query.filter_by(user_id = user_id).first().id
     tests = Test.query.filter_by(teacher_id = teacher_id).all()
-
     return render_template('test.html', tests = tests)
 
 @app.route('/edit_test', methods=['GET','POST'])
 @app.route('/edit_test/',methods=['GET','POST'])
 @app.route('/edit_test/<int:id>', methods=['GET','POST'])
 @login_required
-def edit_test(id=''):
+def edit_test(id=0):
     if current_user.is_student():
         return redirect(url_for('index'))
+    if id == 0:
+        sess = db.session()
+        teacher_id = Teacher.query.filter_by(user_id = current_user.id).first().id
+        new_test = Test(teacher_id, 'new test')
+        sess.add(new_test)
+        sess.commit()
+        new_id = new_test.id
+        return redirect(url_for('edit_test',id = new_id))
     form = 1
+    test = Test.query.filter_by(id = id).first_or_404()
     questions = Question.query.filter_by(test_id = id).all
-    return render_template('edit_test.html', form=form)
+    return render_template('edit_test.html', form = form, test = test, questions = questions)
 
 
 @app.route('/add_user',methods=['GET','POST'])

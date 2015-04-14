@@ -97,7 +97,17 @@ class Test(db.Model):
     name = db.Column(db.String(250))
     final_date = db.Column(db.DateTime)
 
+    def __init__(self, teacher_id, name):
+        self.teacher_id = teacher_id
+        self.name = name
+
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
     text = db.Column(db.String(250))
+
+class Assigned(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
+    completed = db.Column(db.Boolean, default = False)

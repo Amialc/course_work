@@ -3,6 +3,19 @@ body {
 	margin-right: 10%;
     margin-left: 10%;
 }
+
+p {
+    color: #ffffff;
+}
+
+.table-nonfluid {
+   width: auto !important;
+}
+
+.center-x {
+    text-align:center;
+}
+
 #custom-navbar.navbar-default {
     font-size: 14px;
     background-color: rgba(248, 248, 248, 1);

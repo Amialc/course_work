@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
-{% block content %}
+{% block script %}
+<script type="text/javascript" src="{{ url_for('static',filename='js/jeditable.js') }}"></script>
+{% endblock %}
 
+{% block content %}
+<div class="text-center">
+    {{ test.name }}
+</div>
 {% endblock %}
