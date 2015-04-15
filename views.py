@@ -101,6 +101,24 @@ def delete_test(id):
         sess.commit()
     return redirect(url_for('test'))
 
+@app.route('/delete_question/<int:id>', methods=['GET'])
+@login_required
+def delete_question(id):
+    if current_user.is_student():
+        return redirect(url_for('index'))
+    teacher_id = Teacher.query.filter_by(user_id = current_user.id).first_or_404().id
+    question = Question.query.get(id)
+    answers = Answer.query.filter_by(question_id = question.id).all()
+    test = Test.query.get(question.test_id)
+    if test.teacher_id == teacher_id:
+        sess = db.session()
+        for a in answers:
+            sess.delete(a)
+        sess.commit()
+        sess.delete(question)
+        sess.commit()
+    return redirect(url_for('edit_test', id = test.id))
+
 @app.route('/delete_answer/<int:id>', methods=['GET'])
 @login_required
 def delete_answer(id):

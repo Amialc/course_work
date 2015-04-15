@@ -18,7 +18,7 @@
     {% for question in questions %}
     <tr>
     {% if answers[question.id] | length == 0 %}
-    <td>{{ question.text }}</td>
+    <td>{{ question.text }} <a href="{{ url_for('delete_question',id=question.id) }}" class="btn btn-danger">delete question</a></td>
     <td colspan="2"><div class="text-center"><form method="post" action="">
     {{ new_answer_form.hidden_tag() }}
     {{ new_answer_form.question(value=question.id, style="display: none;") }}
@@ -26,7 +26,7 @@
     {{ new_answer_form.submit(class="btn btn-default") }}
     </form></div></td>
     {% else %}
-    <td rowspan="{{ answers[question.id] | length + 1 }}">{{ question.text }}</td>
+    <td rowspan="{{ answers[question.id] | length + 1 }}">{{ question.text }} <a href="{{ url_for('delete_question',id=question.id) }}" class="btn btn-danger">delete question</a></td>
     {% for answer in answers[question.id] %}
     <td><ul>
                 <li>{{ answer.text }}</li>
