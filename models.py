@@ -1,7 +1,8 @@
 from course import db, login_serializer
 
+
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     password = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
     realname = db.Column(db.String(250))
@@ -12,7 +13,7 @@ class User(db.Model):
         self.realname = realname
 
     def is_teacher(self):
-        if Teacher.query.filter_by(user_id = self.id).first():
+        if Teacher.query.filter_by(user_id=self.id).first():
             return True
         else:
             return False
@@ -77,22 +78,28 @@ class User(db.Model):
         """
         for user in User.query.all():
             if user.id == user_id:
-                return User(user.email, user.password)
+                return User(user.email, user.password, user.realname)
         return None
 
+
 class Teacher(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, user_id):
         self.user_id = user_id
 
+
 class Student(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+    def __init__(self, user_id):
+        self.user_id = user_id
+
+
 class Test(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'))
     name = db.Column(db.String(250))
     final_date = db.Column(db.DateTime)
@@ -101,17 +108,19 @@ class Test(db.Model):
         self.teacher_id = teacher_id
         self.name = name
 
+
 class Question(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
     text = db.Column(db.String(250))
 
     def __init__(self, test_id, text):
-        self.test_id =  test_id
+        self.test_id = test_id
         self.text = text
 
+
 class Answer(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
     text = db.Column(db.String(250))
 
@@ -119,8 +128,13 @@ class Answer(db.Model):
         self.question_id = question_id
         self.text = text
 
+
 class Assigned(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
-    completed = db.Column(db.Boolean, default = False)
+    completed = db.Column(db.Boolean, default=False)
+
+    def __init__(self, user_id, test_id):
+        self.user_id = user_id
+        self.test_id = test_id

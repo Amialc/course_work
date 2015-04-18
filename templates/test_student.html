@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div id="custom-navbar" >
+    <div class="navbar navbar-default navbar-static-top navbar-inverse">
+		<div class="navbar-header" style="margin-left: 10%;">
+        <a href="#" class="navbar-brand">tests</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Test</a></li>
+            <li class="divider-vertical"></li>
+            <li><a href="#">About</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right"style="margin-right: 10%;">
+            <li><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span>Exit</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-user"></span>{{ current_user.realname }}</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="row">
+{% if tests %}
+<div class="text-center">
+    {% for test in tests %}
+        <a href="#">{{ test.name }}</a><br>
+    {% endfor %}
+</div>
+{% else %}
+    <p class="text-center" style="color: white;">Sorry, no tests to complete</p>
+{% endif %}
+</div>
+{% endblock %}
