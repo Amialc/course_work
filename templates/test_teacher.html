@@ -25,8 +25,15 @@
     <table class="table table-bordered">
      {% for test in tests %}
         <tr>
+            {% if not test.running %}
             <td><a href="{{ url_for('edit_test',id = test.id) }}">{{ test.name }}</a></td>
+            <td><a href="{{ url_for('run', id = test.id) }}">Run test</a></td>
+            {% else %}
+            <td>{{ test.name }}</td>
+            <td><a href="{{ url_for('off', id = test.id) }}">turn off the test</a></td>
+            {% endif %}
             <td><a href="{{ url_for('delete_test',id = test.id) }}">remove</a></td>
+
         </tr>
      {% endfor %}
     </table>

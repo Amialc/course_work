@@ -16,5 +16,3 @@ sess.commit()
 teacher = Teacher(user.id)
 sess.add(teacher)
 sess.commit()
-
-#os.popen("python db_init.py")

@@ -29,11 +29,9 @@
     {% else %}
     <td rowspan="{{ answers[question.id] | length + 1 }}">{{ question.text }} <a href="{{ url_for('delete_question',id=question.id) }}" class="btn btn-danger">delete question</a></td>
     {% for answer in answers[question.id] %}
-    <td><ul>
-                <li>{{ answer.text }}</li>
-        </ul></td>
-    <td><a href="{{ url_for('delete_answer',id=answer.id) }}" class="btn btn-danger">delete</a></td>
-    </tr>
+        <td><ul><li>{{ answer.text }}</li></ul></td>
+        <td><a href="{{ url_for('delete_answer',id=answer.id) }}" class="btn btn-danger">delete</a></td>
+        </tr>
     {% endfor %}
     <tr><td colspan="2">
     <div class="text-center">
@@ -59,15 +57,25 @@
 
 <div id="assign" class="text-center">
     <h3>Assigned:</h3>
-    <form method="post" action="">
+    <form method="post" action="" style="color: #ffffff;">
         {{ assign_form.hidden_tag() }}
-        {# {% for subfield in assign_form.students %}
+        {% for subfield in assign_form.students %}
             {{ subfield }}
             {{ subfield.label }}
             <br>
-        {% endfor %} #}
-        {{ assign_form.students }}
+        {% endfor %}
         {{ assign_form.submit(class="btn btn-default") }}
+    </form>
+</div>
+<br>
+<div id="date" class="text-center">
+    {% if date_error %}
+        <p class="alert-danger">{{ date_error }}</p>
+    {% endif %}
+    <form method="post" action="" style="">
+    {{ date_form.hidden_tag() }}
+    {{ date_form.date(id="datepicker") }}
+    {{ date_form.submit(class="btn btn-default") }}
     </form>
 </div>
 {% endblock %}

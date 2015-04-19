@@ -1,18 +1,8 @@
 from flask.ext.wtf import Form
-from wtforms import PasswordField, SubmitField, StringField, RadioField, IntegerField, SelectMultipleField, widgets
+from wtforms import PasswordField, SubmitField, StringField, RadioField, IntegerField, SelectMultipleField, DateField
+#from wtforms.fields.html5 import DateField
 from wtforms.validators import Required
-from wtforms.widgets import html_params, ListWidget, CheckboxInput
-
-
-class MultiCheckboxField(SelectMultipleField):
-    """
-    A multiple-select, except displays a list of checkboxes.
-
-    Iterating the field will produce subfields, allowing custom rendering of
-    the enclosed checkbox fields.
-    """
-    widget = widgets.ListWidget(prefix_label=False)
-    option_widget = widgets.CheckboxInput()
+from wtforms.widgets import CheckboxInput, ListWidget
 
 
 class IndexForm(Form):
@@ -39,8 +29,12 @@ class AddAnswerForm(Form):
     submit = SubmitField('Submit')
 
 
-class AssignForm(Form):
-    #students = MultiCheckboxField('students', choices=[])
-    students = SelectMultipleField('students', choices=[], default=[], option_widget=CheckboxInput)
+class DateForm(Form):
+    date = DateField('date', format="%d-%m-%Y", validators=[Required()])
+    submit = SubmitField('Submit')
 
+
+class AssignForm(Form):
+    students = SelectMultipleField('students', choices=[], default=[], widget=ListWidget(),
+                                   option_widget=CheckboxInput())
     submit = SubmitField('Submit')

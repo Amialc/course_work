@@ -1,9 +1,13 @@
-from course import app, db, login_serializer, lm
+from hashlib import md5
+
 from flask_login import login_required, login_user, logout_user, current_user
 from flask import render_template, redirect, url_for, flash, g
-from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm
+
+from course import app, db, login_serializer, lm
+from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, DateForm
 from models import User, Teacher, Student, Test, Question, Answer, Assigned
-from hashlib import md5
+from datetime import date
+import time
 
 
 @lm.user_loader
@@ -34,10 +38,10 @@ def load_token(token):
     data = login_serializer.loads(token, max_age=max_age)
     print data
 
-    #Find the User
+    # Find the User
     user = User.get(data[0])
 
-    #Check Password and return user or None
+    # Check Password and return user or None
     if user and data[1] == user.password:
         return user
     return None
@@ -134,6 +138,22 @@ def test():
             tests.append(a)
         return render_template('test_student.html', tests=tests)
 
+#@app.route('/run_test',methods=['GET','POST'])
+@app.route('/run_test/<int:id>', methods=['GET','POST'])
+def run(id):
+    if current_user.is_student():
+        return redirect(url_for('index'))
+    Test.query.get(id).running = True
+    db.session.commit()
+    return redirect(url_for('test'))
+
+@app.route('/off_test/<int:id>', methods=['GET','POST'])
+def off(id):
+    if current_user.is_student():
+        return redirect(url_for('index'))
+    Test.query.get(id).running = False
+    db.session.commit()
+    return redirect(url_for('test'))
 
 @app.route('/edit_test', methods=['GET', 'POST'])
 @app.route('/edit_test/', methods=['GET', 'POST'])
@@ -142,7 +162,7 @@ def test():
 def edit_test(id=0, question=0):
     if current_user.is_student():
         return redirect(url_for('index'))
-    if id == 0:
+    if id == 0:  # test not exist, creating a new one
         teacher_id = Teacher.query.filter_by(user_id=current_user.id).first().id
         new_test = Test(teacher_id, 'new test')
         db.session.add(new_test)
@@ -168,23 +188,35 @@ def edit_test(id=0, question=0):
         return redirect(url_for('edit_test', id=test.id))
     assign_form = AssignForm(prefix='assign')
     if assign_form.is_submitted():
+        for a in Assigned.query.filter_by(test_id=test.id).all():
+            db.session.delete(a)
+        db.session.commit()
         for s in assign_form.students.data:
-            assign = Assigned(Student.query.filter_by(id = s).first().user_id, id)
+            assign = Assigned(Student.query.filter_by(id=s).first().user_id, id)
             db.session.add(assign)
-            db.session.commit()
-        return redirect(url_for('edit_test', id = test.id))
-    #assign_form.students.default = [] #not working
-    if not assign_form.students.choices:
-        for s in Student.query.all():
-            assign_form.students.choices.append((s.id, User.query.filter_by(id=s.user_id).first().realname))
-            if Assigned.query.filter_by(user_id = s.user_id, test_id=id).first():
-                assign_form.students.default.append(s.id)
-            print assign_form.students.choices
-    print '2',assign_form.students.default
+        db.session.commit()
+        return redirect(url_for('edit_test', id=test.id))
+    assign_form.students.choices, assign_form.students.default = [], []
+    for s in Student.query.all():
+        assign_form.students.choices.append((s.id, User.query.filter_by(id=s.user_id).first().realname))
+        if Assigned.query.filter_by(user_id=s.user_id, test_id=id).first():
+            assign_form.students.default.append(s.id)
     assign_form.process()
+    date_form = DateForm()
+    date_error = None
+    if date_form.validate_on_submit():
+        print date_form.data
+        if date_form.date.data < date.today(): #if date is less today
+            date_error = "Date must be not less than today"
+        else:
+            test.final_date = date_form.date.data
+            db.session.commit()
+        return redirect(url_for('edit_test', id=test.id))
+    date_form.date.data = test.final_date
     return render_template('edit_test.html',
                            new_question_form=new_question_form, test=test, questions=questions,
-                           answers=answers, new_answer_form=new_answer_form, assign_form=assign_form)
+                           answers=answers, new_answer_form=new_answer_form, assign_form=assign_form,
+                           date_form=date_form, date_error = date_error)
 
 
 @app.route('/edit_test_name/<int:id>', methods=['GET', 'POST'])
@@ -225,5 +257,4 @@ def add_user():
                 db.session.commit()
         else:
             return "net"  # TODO: fix
-        print form.password.data
     return render_template('add_user.html', form=form)

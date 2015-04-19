@@ -1,5 +1,5 @@
 from course import db, login_serializer
-
+from datetime import date
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -102,11 +102,15 @@ class Test(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'))
     name = db.Column(db.String(250))
-    final_date = db.Column(db.DateTime)
+    running = db.Column(db.Boolean, default=False)
+    final_date = db.Column(db.Date)
 
-    def __init__(self, teacher_id, name):
+
+    def __init__(self, teacher_id, name, final_date=None):
         self.teacher_id = teacher_id
         self.name = name
+        if final_date is None:
+            self.final_date = date.today()
 
 
 class Question(db.Model):
@@ -138,3 +142,9 @@ class Assigned(db.Model):
     def __init__(self, user_id, test_id):
         self.user_id = user_id
         self.test_id = test_id
+
+class Correct(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
+    correct = db.Column(db.String)
