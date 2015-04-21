@@ -87,19 +87,6 @@
     </form>
 </div>
 <br>
-<div id="date" class="text-center">
-    {% if date_error %}
-        <p class="alert-danger">{{ date_error }}</p>
-    {% endif %}
-    <form method="post" action="" style="">
-    {% if date_form.errors %}
-        {{ date_form.errors }}
-    {% endif %}
-    {{ date_form.hidden_tag() }}
-    {{ date_form.date(id="datepicker") }}
-    {{ date_form.submit(class="btn btn-default") }}
-    </form>
-</div>
 {% endblock %}
 
 {% block script %}

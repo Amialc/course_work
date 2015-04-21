@@ -31,7 +31,7 @@ class AddAnswerForm(Form):
 
 
 class DateForm(Form):
-    date = DateField('date', format="%d-%m-%Y", validators=[Required()])
+    date = DateField('date', format="%d-%m-%Y")
     submit = SubmitField('Submit')
 
 

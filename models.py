@@ -164,4 +164,11 @@ class Correct(db.Model):
 
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('question.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
+    result = db.Column(db.Integer)
+
+    def __init__(self, user_id, test_id, result):
+        self.user_id = user_id
+        self.test_id = test_id
+        self.result = result

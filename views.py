@@ -1,6 +1,5 @@
 from hashlib import md5
-from datetime import date
-from random import randrange
+from random import randrange, shuffle
 
 from flask_login import login_required, login_user, logout_user, current_user
 from flask import render_template, redirect, url_for, flash, g
@@ -9,8 +8,8 @@ from wtforms.validators import Required
 from flask.ext.wtf import Form
 
 from course import app, db, login_serializer, lm
-from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, DateForm, StudentForm
-from models import User, Teacher, Student, Test, Question, Answer, Assigned, Correct, Assigned_Students
+from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, StudentForm
+from models import User, Teacher, Student, Test, Question, Answer, Assigned, Correct, Assigned_Students, Result
 
 
 @lm.user_loader
@@ -87,10 +86,14 @@ def delete_test(id):
         return redirect(url_for('index'))
     teacher_id = Teacher.query.filter_by(user_id=current_user.id).first_or_404().id
     test = Test.query.filter_by(id=id).first()
+    questions = Question.query.filter_by(test_id = test.id).all()
     if test.teacher_id == teacher_id:
-        sess = db.session()
-        sess.delete(test)
-        sess.commit()
+        for q in questions:
+            delete_question(q.id)
+        for r in Result.query.filter_by(test_id = id).all():
+            db.session.delete(r)
+        db.session.delete(test)
+        db.session.commit()
     return redirect(url_for('test'))
 
 
@@ -104,6 +107,9 @@ def delete_question(id):
     answers = Answer.query.filter_by(question_id=question.id).all()
     test = Test.query.get(question.test_id)
     if test.teacher_id == teacher_id:
+        for c in Correct.query.filter_by(question_id = id).all():
+            db.session.delete(c)
+        db.session.commit()
         for a in answers:
             db.session.delete(a)
         db.session.commit()
@@ -126,6 +132,14 @@ def delete_answer(id):
     return redirect(url_for('edit_test', id=test_id))
 
 
+@app.route('/results/<int:id>', methods=['GET','POST'])
+@login_required
+def result(id):
+    results = []
+    for r in Result.query.filter_by(test_id = id).all():
+        results.append((User.query.get(r.user_id), r.result))
+    return render_template('results.html', results = results)
+
 @app.route('/test', methods=['GET', 'POST'])
 @app.route('/test/', methods=['GET', 'POST'])
 @login_required
@@ -134,17 +148,20 @@ def test():
     if current_user.is_teacher() or current_user.is_admin():
         teacher_id = Teacher.query.filter_by(user_id=user_id).first().id
         tests = Test.query.filter_by(teacher_id=teacher_id).all()
-        return render_template('test_teacher.html', tests=tests)
+        return render_template('test_teacher.html', tests=tests, teacher_id = teacher_id)
     else:
         tests = []
         for a in Assigned.query.filter_by(user_id=user_id).all():
-            tests.append(Test.query.get(a.test_id))
+            if a.completed == False:
+                tests.append(Test.query.get(a.test_id))
+        print tests
         return render_template('test_student.html', tests=tests)
 
 
 @app.route('/test/<int:id>', methods=['GET', 'POST'])
 def run_test(id):
-    if current_user.is_teacher() or current_user.is_admin() or not Test.query.get(id).running:
+    if current_user.is_teacher() or current_user.is_admin() or not Test.query.get(
+            id).running or Assigned.query.filter_by(test_id=id).first().completed:
         return redirect(url_for('test'))
 
     class F(Form):
@@ -155,15 +172,24 @@ def run_test(id):
         choices = []
         for a in Answer.query.filter_by(question_id=q.id).all():
             choices.append((a.id, a.text))
+        shuffle(choices)
         setattr(F, str(q.id), RadioField(q.text, coerce=int, choices=choices, validators=[Required()]))
     setattr(F, 'submit', SubmitField('submit'))
     form = F()
 
     if form.validate_on_submit():
+        result = 0
         for f in form:
             if not f.name is 'csrf_token' and not f.name is 'submit':
+                if Correct.query.filter_by(question_id=f.name).first().correct == decode(str(f.data)):
+                    result += 1
                 print f.name, f.data
-
+        res = Result(current_user.id, id, result)
+        db.session.add(res)
+        assigned = Assigned.query.filter_by(user_id = current_user.id, test_id = id).first()
+        assigned.completed = True
+        db.session.commit()
+        return redirect(url_for('test'))
     return render_template('test_student.html', form=form)
 
 
@@ -173,11 +199,11 @@ def profile(id):
     # user = User.query.get(id)
     if current_user.is_teacher() or current_user.is_admin():
         student_form = StudentForm()
-        current_teacher = Teacher.query.filter_by(user_id = current_user.id).first()
+        current_teacher = Teacher.query.filter_by(user_id=current_user.id).first()
         if student_form.validate_on_submit():
-            password = randrange(100000,999999) #random password from 100000 to 999999
-            #TODO: send an email
-            user = User(student_form.email.data, decode(str(password)), student_form.realname.data) #TODO: decode
+            password = randrange(100000, 999999)  # random password from 100000 to 999999
+            # TODO: send an email
+            user = User(student_form.email.data, decode(str(password)), student_form.realname.data)  #TODO: decode
             db.session.add(user)
             db.session.commit()
             student = Student(user.id)
@@ -187,14 +213,14 @@ def profile(id):
             db.session.add(assign)
             db.session.commit()
             print password
-            return redirect(url_for('profile', id = current_user.id))
+            return redirect(url_for('profile', id=current_user.id))
         assigned_students = Assigned_Students.query.filter_by(teacher_id=current_teacher.id).all()
         students = []
         for student in assigned_students:
             user = User.query.get(Student.query.get(student.id).user_id)
             students.append((user.realname, user.email))
         return render_template('profile.html', students=students, student_form=student_form)
-    else:
+    else:  # if student
         tests = Assigned.query.filter_by(user_id=current_user.id, completed=1).all()
         return render_template('profile.html', tests=tests)
 
@@ -267,26 +293,14 @@ def edit_test(id=0, question=0):
         if Assigned.query.filter_by(user_id=s.user_id, test_id=id).first():
             assign_form.students.default.append(s.id)
     assign_form.process()
-    date_form = DateForm()
-    date_error = None
-    if date_form.validate_on_submit():
-        print date_form.data
-        if date_form.date.data < date.today():  #if date is less today
-            date_error = "Date must be not less than today"
-        else:
-            test.final_date = date_form.date.data
-            db.session.commit()
-        return redirect(url_for('edit_test', id=test.id))
-    date_form.date.data = test.final_date
     return render_template('edit_test.html',
                            new_question_form=new_question_form, test=test, questions=questions,
-                           answers=answers, new_answer_form=new_answer_form, assign_form=assign_form,
-                           date_form=date_form, date_error=date_error)
+                           answers=answers, new_answer_form=new_answer_form, assign_form=assign_form)
 
 
 @app.route('/correct/<int:id>', methods=['GET', 'POST'])
 @login_required
-def correct(id):  #marks answer (ID) as correct
+def correct(id):  # marks answer (ID) as correct
     answer = Answer.query.get(id)
     cor = Correct.query.filter_by(question_id=answer.question_id).first()
     if cor:  #exist correct
