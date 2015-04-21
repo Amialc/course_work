@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div id="custom-navbar" >
+    <div class="navbar navbar-default navbar-static-top navbar-inverse">
+		<div class="navbar-header" style="margin-left: 10%;">
+        <a href="#" class="navbar-brand">tests</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="{{ url_for('test') }}">Test</a></li>
+            <li class="divider-vertical"></li>
+            <li><a href="#">About</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right"style="margin-right: 10%;">
+            <li class="active"><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span>Exit</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-user"></span>{{ current_user.realname }}</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="text-center">
+{% if students %}
+    <table class="table table-bordered" style="color: #ffffff;">
+        {% for student in students %}
+            <tr>
+                <td>{{ student[0] }}</td>
+                <td>{{ student[1] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p style="color: #ffffff;">No assigned students to you</p>
+{% endif %}
+{% if student_form %}
+    <h3>Add new student:</h3>
+    <form action="" method="post">
+        {{ student_form.hidden_tag() }}
+        {% if student_form.realname.errors %}
+            <div class="alert-danger">{% for error in student_form.realname.errors %}{{ error }}<br>{% endfor %}</div><br>
+        {% endif %}
+        {{ student_form.realname(placeholder="realname") }}<br>
+        <br>
+        {% if student_form.email.errors %}
+            <div class="alert-danger">{% for error in student_form.email.errors %}{{ error }}<br>{% endfor %}</div><br>
+        {% endif %}
+        {{ student_form.email(placeholder="email") }}<br><br>
+        {{ student_form.submit(class="btn btn-default") }}
+    </form>
+{% endif %}
+</div>
+
+{% endblock %}

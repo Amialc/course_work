@@ -1,13 +1,16 @@
 from hashlib import md5
+from datetime import date
+from random import randrange
 
 from flask_login import login_required, login_user, logout_user, current_user
 from flask import render_template, redirect, url_for, flash, g
+from wtforms import RadioField, SubmitField
+from wtforms.validators import Required
+from flask.ext.wtf import Form
 
 from course import app, db, login_serializer, lm
-from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, DateForm
-from models import User, Teacher, Student, Test, Question, Answer, Assigned
-from datetime import date
-import time
+from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, DateForm, StudentForm
+from models import User, Teacher, Student, Test, Question, Answer, Assigned, Correct, Assigned_Students
 
 
 @lm.user_loader
@@ -135,11 +138,70 @@ def test():
     else:
         tests = []
         for a in Assigned.query.filter_by(user_id=user_id).all():
-            tests.append(a)
+            tests.append(Test.query.get(a.test_id))
         return render_template('test_student.html', tests=tests)
 
-#@app.route('/run_test',methods=['GET','POST'])
-@app.route('/run_test/<int:id>', methods=['GET','POST'])
+
+@app.route('/test/<int:id>', methods=['GET', 'POST'])
+def run_test(id):
+    if current_user.is_teacher() or current_user.is_admin() or not Test.query.get(id).running:
+        return redirect(url_for('test'))
+
+    class F(Form):
+        pass
+
+    # form = TestForm()
+    for q in Question.query.filter_by(test_id=id).all():
+        choices = []
+        for a in Answer.query.filter_by(question_id=q.id).all():
+            choices.append((a.id, a.text))
+        setattr(F, str(q.id), RadioField(q.text, coerce=int, choices=choices, validators=[Required()]))
+    setattr(F, 'submit', SubmitField('submit'))
+    form = F()
+
+    if form.validate_on_submit():
+        for f in form:
+            if not f.name is 'csrf_token' and not f.name is 'submit':
+                print f.name, f.data
+
+    return render_template('test_student.html', form=form)
+
+
+@app.route('/profile/<int:id>', methods=['GET', 'POST'])
+@login_required
+def profile(id):
+    # user = User.query.get(id)
+    if current_user.is_teacher() or current_user.is_admin():
+        student_form = StudentForm()
+        current_teacher = Teacher.query.filter_by(user_id = current_user.id).first()
+        if student_form.validate_on_submit():
+            password = randrange(100000,999999) #random password from 100000 to 999999
+            #TODO: send an email
+            user = User(student_form.email.data, decode(str(password)), student_form.realname.data) #TODO: decode
+            db.session.add(user)
+            db.session.commit()
+            student = Student(user.id)
+            db.session.add(student)
+            db.session.commit()
+            assign = Assigned_Students(current_teacher.id, student.id)
+            db.session.add(assign)
+            db.session.commit()
+            print password
+            return redirect(url_for('profile', id = current_user.id))
+        assigned_students = Assigned_Students.query.filter_by(teacher_id=current_teacher.id).all()
+        students = []
+        for student in assigned_students:
+            user = User.query.get(Student.query.get(student.id).user_id)
+            students.append((user.realname, user.email))
+        return render_template('profile.html', students=students, student_form=student_form)
+    else:
+        tests = Assigned.query.filter_by(user_id=current_user.id, completed=1).all()
+        return render_template('profile.html', tests=tests)
+
+
+# @app.route('/run_test',methods=['GET','POST'])
+@app.route('/run_test/<int:id>', methods=['GET', 'POST'])
+@login_required
 def run(id):
     if current_user.is_student():
         return redirect(url_for('index'))
@@ -147,13 +209,16 @@ def run(id):
     db.session.commit()
     return redirect(url_for('test'))
 
-@app.route('/off_test/<int:id>', methods=['GET','POST'])
+
+@app.route('/off_test/<int:id>', methods=['GET', 'POST'])
+@login_required
 def off(id):
     if current_user.is_student():
         return redirect(url_for('index'))
     Test.query.get(id).running = False
     db.session.commit()
     return redirect(url_for('test'))
+
 
 @app.route('/edit_test', methods=['GET', 'POST'])
 @app.route('/edit_test/', methods=['GET', 'POST'])
@@ -206,7 +271,7 @@ def edit_test(id=0, question=0):
     date_error = None
     if date_form.validate_on_submit():
         print date_form.data
-        if date_form.date.data < date.today(): #if date is less today
+        if date_form.date.data < date.today():  #if date is less today
             date_error = "Date must be not less than today"
         else:
             test.final_date = date_form.date.data
@@ -216,7 +281,21 @@ def edit_test(id=0, question=0):
     return render_template('edit_test.html',
                            new_question_form=new_question_form, test=test, questions=questions,
                            answers=answers, new_answer_form=new_answer_form, assign_form=assign_form,
-                           date_form=date_form, date_error = date_error)
+                           date_form=date_form, date_error=date_error)
+
+
+@app.route('/correct/<int:id>', methods=['GET', 'POST'])
+@login_required
+def correct(id):  #marks answer (ID) as correct
+    answer = Answer.query.get(id)
+    cor = Correct.query.filter_by(question_id=answer.question_id).first()
+    if cor:  #exist correct
+        cor.correct = decode(str(answer.id))
+    else:
+        cor = Correct(answer.question_id, decode(str(answer.id)))
+        db.session.add(cor)
+    db.session.commit()
+    return redirect(url_for('edit_test', id=Question.query.get(answer.question_id).test_id))
 
 
 @app.route('/edit_test_name/<int:id>', methods=['GET', 'POST'])

@@ -1,6 +1,24 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<div id="custom-navbar" >
+    <div class="navbar navbar-default navbar-static-top navbar-inverse">
+		<div class="navbar-header" style="margin-left: 10%;">
+        <a href="#" class="navbar-brand">tests</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="{{ url_for('test') }}">Test</a></li>
+            <li class="divider-vertical"></li>
+            <li><a href="#">About</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right"style="margin-right: 10%;">
+            <li><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span>Exit</a></li>
+            <li><a href="{{ url_for('profile', id = current_user.id) }}"><span class="glyphicon glyphicon-user"></span>{{ current_user.realname }}</a></li>
+        </ul>
+    </div>
+</div>
+
 <div id="edit">
     <div class="text-center">
         {{ test.name }}
@@ -31,6 +49,7 @@
     {% for answer in answers[question.id] %}
         <td><ul><li>{{ answer.text }}</li></ul></td>
         <td><a href="{{ url_for('delete_answer',id=answer.id) }}" class="btn btn-danger">delete</a></td>
+        <td><a href="{{ url_for('correct', id = answer.id) }}" class="btn btn-success">Mark as correct</a></td>
         </tr>
     {% endfor %}
     <tr><td colspan="2">
@@ -73,6 +92,9 @@
         <p class="alert-danger">{{ date_error }}</p>
     {% endif %}
     <form method="post" action="" style="">
+    {% if date_form.errors %}
+        {{ date_form.errors }}
+    {% endif %}
     {{ date_form.hidden_tag() }}
     {{ date_form.date(id="datepicker") }}
     {{ date_form.submit(class="btn btn-default") }}

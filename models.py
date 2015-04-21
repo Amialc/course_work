@@ -143,8 +143,25 @@ class Assigned(db.Model):
         self.user_id = user_id
         self.test_id = test_id
 
+class Assigned_Students(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
+
+    def __init__(self, teacher_id, student_id):
+        self.teacher_id = teacher_id
+        self.student_id = student_id
+
 class Correct(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
+    #test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'))
-    correct = db.Column(db.String)
+    correct = db.Column(db.String(250))
+
+    def __init__(self, question_id, correct):
+        self.question_id = question_id
+        self.correct = correct
+
+class Result(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('question.id'))

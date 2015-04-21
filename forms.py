@@ -1,7 +1,8 @@
 from flask.ext.wtf import Form
-from wtforms import PasswordField, SubmitField, StringField, RadioField, IntegerField, SelectMultipleField, DateField
-#from wtforms.fields.html5 import DateField
-from wtforms.validators import Required
+from wtforms import PasswordField, SubmitField, StringField, RadioField, IntegerField, SelectMultipleField, DateField, \
+    FieldList, FormField
+# from wtforms.fields.html5 import DateField
+from wtforms.validators import Required, Email
 from wtforms.widgets import CheckboxInput, ListWidget
 
 
@@ -37,4 +38,18 @@ class DateForm(Form):
 class AssignForm(Form):
     students = SelectMultipleField('students', choices=[], default=[], widget=ListWidget(),
                                    option_widget=CheckboxInput())
+    submit = SubmitField('Submit')
+
+
+class Question(Form):
+    question = RadioField()
+
+
+class TestForm(Form):
+    questions = FieldList(RadioField())
+    submit = SubmitField('Submit')
+
+class StudentForm(Form):
+    realname = StringField('realname', validators=[Required()])
+    email = StringField('email', validators=[Required(), Email()])
     submit = SubmitField('Submit')
