@@ -14,7 +14,7 @@
         </ul>
         <ul class="nav navbar-nav navbar-right"style="margin-right: 10%;">
             <li><a href="{{ url_for('logout') }}"><span class="glyphicon glyphicon-log-out"></span>Exit</a></li>
-            <li class="active"><a href="#"><span class="glyphicon glyphicon-user"></span>{{ current_user.realname }}</a></li>
+            <li class="active"><a href="{{ url_for('profile', id = current_user.id) }}"><span class="glyphicon glyphicon-user"></span>{{ current_user.realname }}</a></li>
         </ul>
     </div>
 </div>
@@ -35,7 +35,7 @@
     <form action="" method="post">
         {{ student_form.hidden_tag() }}
         {% if student_form.realname.errors %}
-            <div class="alert-danger">{% for error in student_form.realname.errors %}{{ error }}<br>{% endfor %}</div><br>
+            <div class="alert-danger">{% for error in student_form.realname.errors %}{{ error }}{% endfor %}</div><br>
         {% endif %}
         {{ student_form.realname(placeholder="realname") }}<br>
         <br>

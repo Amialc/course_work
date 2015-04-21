@@ -6,6 +6,7 @@ from flask import render_template, redirect, url_for, flash, g
 from wtforms import RadioField, SubmitField
 from wtforms.validators import Required
 from flask.ext.wtf import Form
+from sqlalchemy.exc import IntegrityError
 
 from course import app, db, login_serializer, lm
 from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, StudentForm
@@ -200,25 +201,31 @@ def profile(id):
     if current_user.is_teacher() or current_user.is_admin():
         student_form = StudentForm()
         current_teacher = Teacher.query.filter_by(user_id=current_user.id).first()
-        if student_form.validate_on_submit():
-            password = randrange(100000, 999999)  # random password from 100000 to 999999
-            # TODO: send an email
-            user = User(student_form.email.data, decode(str(password)), student_form.realname.data)  #TODO: decode
-            db.session.add(user)
-            db.session.commit()
-            student = Student(user.id)
-            db.session.add(student)
-            db.session.commit()
-            assign = Assigned_Students(current_teacher.id, student.id)
-            db.session.add(assign)
-            db.session.commit()
-            print password
-            return redirect(url_for('profile', id=current_user.id))
         assigned_students = Assigned_Students.query.filter_by(teacher_id=current_teacher.id).all()
         students = []
         for student in assigned_students:
             user = User.query.get(Student.query.get(student.id).user_id)
             students.append((user.realname, user.email))
+        if student_form.validate_on_submit():
+            password = randrange(100000, 999999)  # random password from 100000 to 999999
+            # TODO: send an email
+            try:
+                user = User(student_form.email.data, decode(str(password)), student_form.realname.data)
+                db.session.add(user)
+                db.session.commit()
+                student = Student(user.id)
+                db.session.add(student)
+                db.session.commit()
+                assign = Assigned_Students(current_teacher.id, student.id)
+                db.session.add(assign)
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                student_form.realname.errors = 'This user already exists'
+                return render_template('profile.html',students=students, student_form=student_form)
+            print password
+            return redirect(url_for('profile', id=current_user.id))
+
         return render_template('profile.html', students=students, student_form=student_form)
     else:  # if student
         tests = Assigned.query.filter_by(user_id=current_user.id, completed=1).all()

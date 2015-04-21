@@ -32,10 +32,11 @@
             <td>{{ test.name }}</td>
             <td><a href="{{ url_for('off', id = test.id) }}">turn off the test</a></td>
             {% endif %}
+            <td><a href="{{ url_for('result', id = test.id) }}">Results</a></td>
             {% if test.teacher_id == teacher_id %}
             <td><a href="{{ url_for('delete_test',id = test.id) }}">remove</a></td>
             {% endif %}
-            <td><a href="#">Results</a></td>
+
         </tr>
      {% endfor %}
     </table>
