@@ -6,9 +6,10 @@ from flask import render_template, redirect, url_for, flash, g
 from wtforms import RadioField, SubmitField
 from wtforms.validators import Required
 from flask.ext.wtf import Form
+from flask.ext.mail import Message
 from sqlalchemy.exc import IntegrityError
 
-from course import app, db, login_serializer, lm
+from course import app, db, login_serializer, lm, mail
 from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, StudentForm
 from models import User, Teacher, Student, Test, Question, Answer, Assigned, Correct, Assigned_Students, Result
 
@@ -87,11 +88,13 @@ def delete_test(id):
         return redirect(url_for('index'))
     teacher_id = Teacher.query.filter_by(user_id=current_user.id).first_or_404().id
     test = Test.query.filter_by(id=id).first()
-    questions = Question.query.filter_by(test_id = test.id).all()
+    questions = Question.query.filter_by(test_id=test.id).all()
     if test.teacher_id == teacher_id:
+        for a in Assigned.query.filter_by(test_id = test.id).all():
+            db.session.delete(a)
         for q in questions:
             delete_question(q.id)
-        for r in Result.query.filter_by(test_id = id).all():
+        for r in Result.query.filter_by(test_id=id).all():
             db.session.delete(r)
         db.session.delete(test)
         db.session.commit()
@@ -108,7 +111,7 @@ def delete_question(id):
     answers = Answer.query.filter_by(question_id=question.id).all()
     test = Test.query.get(question.test_id)
     if test.teacher_id == teacher_id:
-        for c in Correct.query.filter_by(question_id = id).all():
+        for c in Correct.query.filter_by(question_id=id).all():
             db.session.delete(c)
         db.session.commit()
         for a in answers:
@@ -133,13 +136,14 @@ def delete_answer(id):
     return redirect(url_for('edit_test', id=test_id))
 
 
-@app.route('/results/<int:id>', methods=['GET','POST'])
+@app.route('/results/<int:id>', methods=['GET', 'POST'])
 @login_required
 def result(id):
     results = []
-    for r in Result.query.filter_by(test_id = id).all():
+    for r in Result.query.filter_by(test_id=id).all():
         results.append((User.query.get(r.user_id), r.result))
-    return render_template('results.html', results = results)
+    return render_template('results.html', results=results)
+
 
 @app.route('/test', methods=['GET', 'POST'])
 @app.route('/test/', methods=['GET', 'POST'])
@@ -149,7 +153,7 @@ def test():
     if current_user.is_teacher() or current_user.is_admin():
         teacher_id = Teacher.query.filter_by(user_id=user_id).first().id
         tests = Test.query.filter_by(teacher_id=teacher_id).all()
-        return render_template('test_teacher.html', tests=tests, teacher_id = teacher_id)
+        return render_template('test_teacher.html', tests=tests, teacher_id=teacher_id)
     else:
         tests = []
         for a in Assigned.query.filter_by(user_id=user_id).all():
@@ -187,7 +191,7 @@ def run_test(id):
                 print f.name, f.data
         res = Result(current_user.id, id, result)
         db.session.add(res)
-        assigned = Assigned.query.filter_by(user_id = current_user.id, test_id = id).first()
+        assigned = Assigned.query.filter_by(user_id=current_user.id, test_id=id).first()
         assigned.completed = True
         db.session.commit()
         return redirect(url_for('test'))
@@ -208,7 +212,6 @@ def profile(id):
             students.append((user.realname, user.email))
         if student_form.validate_on_submit():
             password = randrange(100000, 999999)  # random password from 100000 to 999999
-            # TODO: send an email
             try:
                 user = User(student_form.email.data, decode(str(password)), student_form.realname.data)
                 db.session.add(user)
@@ -219,10 +222,17 @@ def profile(id):
                 assign = Assigned_Students(current_teacher.id, student.id)
                 db.session.add(assign)
                 db.session.commit()
+                with mail.connect() as conn:
+                    msg = Message(subject="Registration", recipients=student_form.email.data,
+                                  body="You registered. Password: " + password)
+                    conn.send(msg)
             except IntegrityError:
                 db.session.rollback()
                 student_form.realname.errors = 'This user already exists'
-                return render_template('profile.html',students=students, student_form=student_form)
+                return render_template('profile.html', students=students, student_form=student_form)
+            except:
+                db.session.rollback()
+                return redirect(url_for('profile', id = id))
             print password
             return redirect(url_for('profile', id=current_user.id))
 
@@ -310,7 +320,7 @@ def edit_test(id=0, question=0):
 def correct(id):  # marks answer (ID) as correct
     answer = Answer.query.get(id)
     cor = Correct.query.filter_by(question_id=answer.question_id).first()
-    if cor:  #exist correct
+    if cor:  # exist correct
         cor.correct = decode(str(answer.id))
     else:
         cor = Correct(answer.question_id, decode(str(answer.id)))

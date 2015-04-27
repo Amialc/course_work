@@ -24,7 +24,8 @@
     <table class="table table-bordered">
     {% for result in results %}
         <tr>
-            <td>{{ result[0] }}</td>
+            <td>{{ result[0].realname }}</td>
+            <td>{{ result[0].email }}</td>
             <td>{{ result[1] }}</td>
         </tr>
     {% endfor %}

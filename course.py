@@ -1,4 +1,5 @@
 from flask import Flask
+from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from datetime import timedelta
@@ -11,6 +12,8 @@ app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=14)
 login_serializer = Serializer(app.config['SECRET_KEY'], expires_in=60)
 
 db = SQLAlchemy(app)
+
+mail = Mail(app)
 
 lm = LoginManager()
 lm.init_app(app)
