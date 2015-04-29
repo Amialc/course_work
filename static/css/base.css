@@ -1,6 +1,6 @@
 body {
     background-color: black;
-	margin-right: 10%;
+    margin-right: 10%;
     margin-left: 10%;
 }
 
@@ -13,11 +13,11 @@ form {
 }
 
 .table-nonfluid {
-   width: auto !important;
+    width: auto !important;
 }
 
 .center-x {
-    text-align:center;
+    text-align: center;
 }
 
 #custom-navbar.navbar-default {

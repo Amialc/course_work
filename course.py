@@ -1,9 +1,11 @@
+from datetime import timedelta
+
 from flask import Flask
 from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from datetime import timedelta
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+
 
 app = Flask(__name__)
 app.config.from_object('config')

@@ -1,6 +1,7 @@
 body {
     background-color: black;
 }
+
 img {
     display: block;
     margin-top: 100px;
@@ -10,6 +11,7 @@ img {
     width: 400px;
     height: 400px;
 }
+
 /* removes focus border in Chrome */
 *:focus {
     outline: none;
@@ -30,6 +32,7 @@ img {
     width: 400px;
     height: 200px;
 }
+
 #textfield {
     width: 160px;
     border: 0;

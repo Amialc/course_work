@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import PasswordField, SubmitField, StringField, RadioField, IntegerField, SelectMultipleField, DateField, \
-    FieldList, FormField
+    FieldList
 # from wtforms.fields.html5 import DateField
 from wtforms.validators import Required, Email
 from wtforms.widgets import CheckboxInput, ListWidget
@@ -48,6 +48,7 @@ class Question(Form):
 class TestForm(Form):
     questions = FieldList(RadioField())
     submit = SubmitField('Submit')
+
 
 class StudentForm(Form):
     realname = StringField('realname', validators=[Required()])

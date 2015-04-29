@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from course import db
+
 print "drop_all"
 db.drop_all()
 print "create_all"

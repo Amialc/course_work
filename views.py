@@ -6,10 +6,9 @@ from flask import render_template, redirect, url_for, flash, g
 from wtforms import RadioField, SubmitField
 from wtforms.validators import Required
 from flask.ext.wtf import Form
-from flask.ext.mail import Message
 from sqlalchemy.exc import IntegrityError
 
-from course import app, db, login_serializer, lm, mail
+from course import app, db, login_serializer, lm
 from forms import IndexForm, AddUserForm, AddStringTestForm, AddAnswerForm, AssignForm, StudentForm
 from models import User, Teacher, Student, Test, Question, Answer, Assigned, Correct, Assigned_Students, Result
 
@@ -90,7 +89,7 @@ def delete_test(id):
     test = Test.query.filter_by(id=id).first()
     questions = Question.query.filter_by(test_id=test.id).all()
     if test.teacher_id == teacher_id:
-        for a in Assigned.query.filter_by(test_id = test.id).all():
+        for a in Assigned.query.filter_by(test_id=test.id).all():
             db.session.delete(a)
         for q in questions:
             delete_question(q.id)
@@ -232,7 +231,7 @@ def profile(id):
                 return render_template('profile.html', students=students, student_form=student_form)
             except:
                 db.session.rollback()
-                return redirect(url_for('profile', id = id))
+                return redirect(url_for('profile', id=id))
             print password
             return redirect(url_for('profile', id=current_user.id))
 
@@ -241,10 +240,12 @@ def profile(id):
         tests = Assigned.query.filter_by(user_id=current_user.id, completed=1).all()
         return render_template('profile.html', tests=tests)
 
+
 @app.route('/about')
 @app.route('/about/')
 def about():
-	return render_template('about.html')
+    return render_template('about.html')
+
 
 # @app.route('/run_test',methods=['GET','POST'])
 @app.route('/run_test/<int:id>', methods=['GET', 'POST'])
