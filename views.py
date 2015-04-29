@@ -222,10 +222,10 @@ def profile(id):
                 assign = Assigned_Students(current_teacher.id, student.id)
                 db.session.add(assign)
                 db.session.commit()
-                with mail.connect() as conn:
+                '''with mail.connect() as conn:
                     msg = Message(subject="Registration", recipients=student_form.email.data,
                                   body="You registered. Password: " + password)
-                    conn.send(msg)
+                    conn.send(msg)'''
             except IntegrityError:
                 db.session.rollback()
                 student_form.realname.errors = 'This user already exists'
@@ -241,6 +241,10 @@ def profile(id):
         tests = Assigned.query.filter_by(user_id=current_user.id, completed=1).all()
         return render_template('profile.html', tests=tests)
 
+@app.route('/about')
+@app.route('/about/')
+def about():
+	return render_template('about.html')
 
 # @app.route('/run_test',methods=['GET','POST'])
 @app.route('/run_test/<int:id>', methods=['GET', 'POST'])
