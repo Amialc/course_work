@@ -53,4 +53,5 @@ class TestForm(Form):
 class StudentForm(Form):
     realname = StringField('realname', validators=[Required()])
     email = StringField('email', validators=[Required(), Email()])
+    category = RadioField('category', choices=[('Teacher', 'Teacher'), ('Student', 'Student')], validators=[Required()])
     submit = SubmitField('Submit')

@@ -43,6 +43,9 @@
             <div class="alert-danger">{% for error in student_form.email.errors %}{{ error }}<br>{% endfor %}</div><br>
         {% endif %}
         {{ student_form.email(placeholder="email") }}<br><br>
+        {% if current_user.is_teacher() %}
+            {{ student_form.category(style="color: white;") }}
+        {% endif %}
         {{ student_form.submit(class="btn btn-default") }}
     </form>
 {% endif %}

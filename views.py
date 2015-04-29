@@ -215,7 +215,10 @@ def profile(id):
                 user = User(student_form.email.data, decode(str(password)), student_form.realname.data)
                 db.session.add(user)
                 db.session.commit()
-                student = Student(user.id)
+                if student_form.category.data == 'Teacher':
+                    student = Teacher(user.id)
+                else:
+                    student = Student(user.id)
                 db.session.add(student)
                 db.session.commit()
                 assign = Assigned_Students(current_teacher.id, student.id)
