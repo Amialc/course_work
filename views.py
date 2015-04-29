@@ -15,13 +15,6 @@ from models import User, Teacher, Student, Test, Question, Answer, Assigned, Cor
 
 @lm.user_loader
 def load_user(user_id):
-    """Flask-Login user_loader callback.
-    The user_loader function asks this function to get a User Object or return
-    None based on the user_id.
-    The user_id was stored in the session environment by Flask-Login.
-    user_loader stores the returned User object in current_user during every
-    flask request.
-    """
     member = Teacher.query.filter_by(user_id=user_id).first()
     if member is None:
         member = Student.query.filter_by(user_id=user_id).first()
@@ -36,22 +29,15 @@ def load_user(user_id):
 def load_token(token):
     print "LOAD TOKEN"
     max_age = app.config["REMEMBER_COOKIE_DURATION"].total_seconds()
-
-    # Decrypt the Security Token, data = [username, hashpass]
     data = login_serializer.loads(token, max_age=max_age)
-    print data
-
-    # Find the User
     user = User.get(data[0])
-
-    # Check Password and return user or None
     if user and data[1] == user.password:
         return user
     return None
 
 
 def decode(password):
-    m = md5(password)
+    m = md5(md5(password).hexdigest() + app.config['SECRET_KEY'])
     return m.hexdigest()
 
 
@@ -202,47 +188,50 @@ def run_test(id):
 def profile(id):
     # user = User.query.get(id)
     if current_user.is_teacher() or current_user.is_admin():
-        student_form = StudentForm()
+        add_form = StudentForm()
         current_teacher = Teacher.query.filter_by(user_id=current_user.id).first()
         assigned_students = Assigned_Students.query.filter_by(teacher_id=current_teacher.id).all()
         students = []
         for student in assigned_students:
             user = User.query.get(Student.query.get(student.id).user_id)
             students.append((user.realname, user.email))
-        if student_form.validate_on_submit():
+        if add_form.validate_on_submit():
             password = randrange(100000, 999999)  # random password from 100000 to 999999
             try:
-                user = User(student_form.email.data, decode(str(password)), student_form.realname.data)
+                user = User(add_form.email.data, decode(str(password)), add_form.realname.data)
                 db.session.add(user)
                 db.session.commit()
-                if student_form.category.data == 'Teacher':
-                    student = Teacher(user.id)
+                if add_form.category.data == 'Teacher':
+                    teacher = Teacher(user.id)
+                    db.session.add(teacher)
                 else:
                     student = Student(user.id)
-                db.session.add(student)
-                db.session.commit()
-                assign = Assigned_Students(current_teacher.id, student.id)
-                db.session.add(assign)
+                    db.session.add(student)
+                    db.session.commit()
+                    assign = Assigned_Students(current_teacher.id, student.id)
+                    db.session.add(assign)
+                    students.append((add_form.realname.data, add_form.email.data))
                 db.session.commit()
                 '''with mail.connect() as conn:
-                    msg = Message(subject="Registration", recipients=student_form.email.data,
+                    msg = Message(subject="Registration", recipients=add_form.email.data,
                                   body="You registered. Password: " + password)
                     conn.send(msg)'''
             except IntegrityError:
                 db.session.rollback()
-                student_form.realname.errors = 'This user already exists'
-                return render_template('profile.html', students=students, student_form=student_form)
+                add_form.realname.errors = 'This user already exists'
+                return render_template('profile.html', students=students, add_form=add_form)
             except:
                 db.session.rollback()
                 return redirect(url_for('profile', id=id))
             print password
-            return redirect(url_for('profile', id=current_user.id))
-
-        return render_template('profile.html', students=students, student_form=student_form)
+            add_form.email.data = ''
+            add_form.realname.data = ''
+            add_form.category.data = ''
+            return render_template('profile.html', students=students, success='success', add_form = add_form)
+        return render_template('profile.html', students=students, add_form=add_form)
     else:  # if student
         tests = Assigned.query.filter_by(user_id=current_user.id, completed=1).all()
         return render_template('profile.html', tests=tests)
-
 
 @app.route('/about')
 @app.route('/about/')
